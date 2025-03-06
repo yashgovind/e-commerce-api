@@ -14,17 +14,17 @@ const LocalStrategy = require("passport-local").Strategy;
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const authRoute = require("./routes/loginSignup");
  // SET UP SESSION------below code comes from express-session
+ app.use(session({
+  secret: process.env.PASSPORT_LONG_SECRET,
+  resave: false,
+  saveUninitialized: false
+ }));
  app.use(express.json());
  app.set("view engine", "ejs");
  app.use(cookieParser());
  app.use(express.urlencoded({ extended: true }));
  app.use(express.static(path.join(__dirname, "public")));
  // some more standard middlewares.
- app.use(session({
-  secret: process.env.PASSPORT_LONG_SECRET,
-  resave: false,
-  saveUninitialized: false
- }));
  app.use(passport.initialize());
  app.use(passport.session());
 // middlware for passportjs

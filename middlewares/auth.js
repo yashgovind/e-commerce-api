@@ -33,7 +33,7 @@ passport.use(new GoogleStrategy({
     callbackURL: "/auth/google/callback"
   },
     async (accessToken, refreshToken, profile, done) => {
-        console.log('user profile is' ,profile);
+        // console.log('user profile is' ,profile);
     try {
         let user = await User.find({ googleId: profile.id  , displayName:profile.displayName});
         if (!user) {
@@ -42,6 +42,8 @@ passport.use(new GoogleStrategy({
                 displayName: profile.displayName || profile.name.given_name + ' ' + profile.name.family_name,
             });
         }
+        console.log("user after it is created is ", user);
+        // user is not being created. somehow.
         return done(null, user);
     } catch (error) {
         return done(error);
@@ -50,13 +52,17 @@ passport.use(new GoogleStrategy({
 ));
 
 
+
 // serialize and unserialize user../
 passport.serializeUser(function (user, cb) {
+    // user object is not coming.
+    console.log("serialized user is ", user);
     // console.log('serialized', user.id);
-        return cb(null, user.id , user.displayName);
+        return cb(null, user._id);
 });
 
 passport.deserializeUser(async function (id, cb) {
+    console.log("deserailized user is", user);
     // console.log('unserialized', id);
     const user = await User.findById(id);
       return cb(null, user);
