@@ -6,23 +6,23 @@ const User = require("../models/userModel");
 
 // local strategy
 /*use localstrategy on email. find the user by his email. check if user is verified. if yes, return the callback with email,pass. */
-passport.use(new LocalStrategy(
-    { usernameField: "email" },
-    async function (email, password, done) {
-        try {
-            User.findOne({ email: email }, async function (err, user) {
-                if (err) { return done(err); }
-                if (!user) { return done(null, false); }
-                const isVerified = await bcrypt.compare(password, user.password);
-                if (!isVerified) { return done(null, false); }
+// passport.use(new LocalStrategy(
+// //     { usernameField: "email" },
+// //     async function (email, password, done) {
+// //         try {
+// //             User.findOne({ email: email }, async function (err, user) {
+// //                 if (err) { return done(err); }
+// //                 if (!user) { return done(null, false); }
+// //                 const isVerified = await bcrypt.compare(password, user.password);
+// //                 if (!isVerified) { return done(null, false); }
 
-                return done(null, user);
-            });
-        } catch (error) {
-            return done(error);
-        }
-    }
-));
+// //                 return done(null, user);
+// //             });
+// //         } catch (error) {
+// //             return done(error);
+// //         }
+// //     }
+// // ));
 
 // -------GOOGLE STRATEGY--------
 
@@ -32,13 +32,14 @@ passport.use(new GoogleStrategy({
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: "/auth/google/callback"
   },
-  async (accessToken,refreshToken, profile, done) =>{
+    async (accessToken, refreshToken, profile, done) => {
+        console.log('user profile is' ,profile);
     try {
-        let user = await User.findOne({ googleId: profile.id });
+        let user = await User.find({ googleId: profile.id  , displayName:profile.displayName});
         if (!user) {
             user = await User.create({
                 googleId: profile.id,
-                displayName: profile.displayName,
+                displayName: profile.displayName || profile.name.given_name + ' ' + profile.name.family_name,
             });
         }
         return done(null, user);
@@ -51,12 +52,25 @@ passport.use(new GoogleStrategy({
 
 // serialize and unserialize user../
 passport.serializeUser(function (user, cb) {
-    console.log('serialized', user.id);
-        return cb(null, user.id);
+    // console.log('serialized', user.id);
+        return cb(null, user.id , user.displayName);
 });
 
 passport.deserializeUser(async function (id, cb) {
-    console.log('unserialized', id);
+    // console.log('unserialized', id);
     const user = await User.findById(id);
       return cb(null, user);
 });
+
+
+const isAuthenticated = (req, res, next) => {
+    if (!req.isAuthenticated()) {
+        res.redirect("/");
+    }
+    return next();
+};
+
+// cannt export passport  directly idk why router error vastundi
+
+
+module.exports = { passport, isAuthenticated };

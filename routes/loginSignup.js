@@ -1,26 +1,12 @@
 require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
-const passport = require("passport");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 require("../middlewares/auth");
 const User = require("../models/userModel");
 const router = express.Router();
-
-// register.
-router.post("/register", async (req, res) => {
-    const { email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    try {
-        const newUser = await User.create({ email, password: hashedPassword, displayName: email });
-        res.send("User registered! <a href='/login'>Login</a>");
-    } catch (err) {
-        res.send("Error: User already exists!");
-    }
-});
-
+const { passport, isAuthenticated } = require("../middlewares/auth");
 
 // normal authentication. success --> /profile. failure . /login
 router.post("/login",
@@ -35,26 +21,21 @@ router.get("/auth/google/callback",
     passport.authenticate("google", { successRedirect: "/profile", failureRedirect: "/" })
 );
 
-//profile route
-router.get("/profile", (req, res) => {
-    console.log(req.user);
-    console.log(req.user.id);
+// profile route
+router.get("/profile", isAuthenticated, (req, res) => {
+    // console.log(req.user);
     // console.log(typeof req.user);
-    console.log('user session is ',req.session.passport);
-    if (!req.isAuthenticated()) return res.redirect("/");
-    res.send(`<h1>Welcome, ${req.user.googleId}</h1> <a href='/logout'>Logout</a>`);
+    res.send(`<h1>Welcome, ${req.user.displayName}</h1> <a href='/logout'>Logout</a>`);
 });
 
 // logout
-router.get("/logout", (req, res) => {
+router.get("/logout", isAuthenticated, (req, res) => {
     req.logout(() => {
         res.redirect("/");
     });
 });
 
-
 // default route
-
 router.get("/", (req, res) => {
     res.send(`
         <h1>Login Options</h1>
