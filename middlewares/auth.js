@@ -27,6 +27,8 @@ const User = require("../models/userModel");
 // -------GOOGLE STRATEGY--------
 
 /* pass in clientId,clientSecret,clientUrl , return the find the user by his googleID, if user doesnt exist , create a new User googleId return callback.*/
+
+
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -35,7 +37,7 @@ passport.use(new GoogleStrategy({
     async (accessToken, refreshToken, profile, done) => {
         // console.log('user profile is' ,profile);
     try {
-        let user = await User.find({ googleId: profile.id  , displayName:profile.displayName});
+        let user = await User.findOne({ googleId: profile.id} , {displayName:profile.displayName});
         if (!user) {
             user = await User.create({
                 googleId: profile.id,
@@ -58,13 +60,14 @@ passport.serializeUser(function (user, cb) {
     // user object is not coming.
     console.log("serialized user is ", user);
     // console.log('serialized', user.id);
-        return cb(null, user._id);
+        return cb(null, user);
 });
 
-passport.deserializeUser(async function (id, cb) {
-    console.log("deserailized user is", user);
+
+passport.deserializeUser(async function (user, cb) {
     // console.log('unserialized', id);
-    const user = await User.findById(id);
+    // const user = await User.findById(id);
+    console.log(`the user : ${user}`);
       return cb(null, user);
 });
 
